@@ -39,6 +39,17 @@ app = FastAPI(
     version="0.2.0"
 )
 
+from fastapi.middleware.cors import CORSMiddleware
+
+# Autoriser les requêtes depuis le frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # En dev : tout accepter
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 import joblib
 import numpy as np
 
@@ -131,4 +142,17 @@ def predict(patient: PatientInput):
         confiance=confiance,
         message=messages.get(diagnostic, "Consultez un médecin.")
     )
+
+@app.get("/model-info")
+def model_info():
+    """
+    Retourne les informations du modèle IA utilisé.
+    """
+
+    return {
+        "model_type": type(model).__name__,
+        "n_estimators": getattr(model, "n_estimators", "N/A"),
+        "classes": list(model.classes_) if hasattr(model, "classes_") else [],
+        "n_features": len(feature_cols) if feature_cols is not None else "N/A"
+    }
 
